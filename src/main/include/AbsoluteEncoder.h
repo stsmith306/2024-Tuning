@@ -34,10 +34,9 @@ class AbsoluteEncoder {
                 m_rollover_offset = 1_tr;
             }
 
-            double offset_delta = m_absoluteEncoder.GetAbsolutePosition() - m_absoluteEncoderOffset;
-            fmt::print("Absolute Position {}\n", m_absoluteEncoder.GetAbsolutePosition());
-            fmt::print("Absolute Offset {}\n", m_absoluteEncoderOffset);
-            fmt::print("Distance {}\n", GetDistance() );
+            // fmt::print("Absolute Position {}\n", m_absoluteEncoder.GetAbsolutePosition());
+            // fmt::print("Absolute Offset {}\n", m_absoluteEncoderOffset);
+            // fmt::print("Distance {}\n", GetDistance() );
 
         }
 

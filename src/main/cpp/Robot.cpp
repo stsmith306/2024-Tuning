@@ -43,6 +43,9 @@ void Robot::RobotInit() {
   armConfigs.MotorOutput.Inverted = true;
   m_armMotor.GetConfigurator().Apply(armConfigs, 50_ms);
 
+  m_armFeedforward = new frc::ArmFeedforward{units::volt_t{kArmS}, units::volt_t{kArmG}, 
+                                        units::unit_t<frc::ArmFeedforward::kv_unit> {kArmV}, 
+                                        units::unit_t<frc::ArmFeedforward::ka_unit> {kArmA}};
 
   m_wristMotor.GetConfigurator().Apply(ctre::phoenix6::configs::TalonFXConfiguration{});
 
@@ -73,76 +76,82 @@ void Robot::RobotInit() {
 
   fmt::print( "Pos and Velocity update rates are : {} and {}\n", wristPosReference.GetAppliedUpdateFrequency(), wristVelReference.GetAppliedUpdateFrequency() );
 
-  frc::SmartDashboard::PutNumber( "Elevator P", kElevatorP );
-  frc::SmartDashboard::PutNumber( "Elevator I", kElevatorI );
-  frc::SmartDashboard::PutNumber( "Elevator D", kElevatorD );
-  frc::SmartDashboard::PutNumber( "Elevator S", kElevatorS );
-  frc::SmartDashboard::PutNumber( "Elevator G", kElevatorG );
-  frc::SmartDashboard::PutNumber( "Elevator V", kElevatorV );
-  frc::SmartDashboard::PutNumber( "Elevator A", kElevatorA );
+  TuningParameters::Values pid_vals;
+  // pid_vals = TuningParameters::Values{ kElevatorP, kElevatorI, kElevatorD, 
+  //                                    kElevatorS, kElevatorG, kElevatorV, kElevatorA };
+  // TuningParameters::SetSmartDashboardValues( "Elevator", pid_vals );
 
-  frc::SmartDashboard::PutNumber( "Arm P", kArmP );
-  frc::SmartDashboard::PutNumber( "Arm I", kArmI );
-  frc::SmartDashboard::PutNumber( "Arm D", kArmD );
-  frc::SmartDashboard::PutNumber( "Arm S", kArmS );
-  frc::SmartDashboard::PutNumber( "Arm G", kArmG );
-  frc::SmartDashboard::PutNumber( "Arm V", kArmV );
-  frc::SmartDashboard::PutNumber( "Arm A", kArmA );
 
-  frc::SmartDashboard::PutNumber( "Wrist P", kWristP );
-  frc::SmartDashboard::PutNumber( "Wrist I", kWristI );
-  frc::SmartDashboard::PutNumber( "Wrist D", kWristD );
-  frc::SmartDashboard::PutNumber( "Wrist S", kWristS );
-  frc::SmartDashboard::PutNumber( "Wrist G", kWristG );
-  frc::SmartDashboard::PutNumber( "Wrist V", kWristV );
-  frc::SmartDashboard::PutNumber( "Wrist A", kWristA );
+  pid_vals = TuningParameters::Values{ kArmP, kArmI, kArmD, kArmS, kArmG, kArmV, kArmA };
+  TuningParameters::SetSmartDashboardValues( "Arm", pid_vals );
 
-  frc::SmartDashboard::PutNumber( "Shooter P", kShooterP );
-  frc::SmartDashboard::PutNumber( "Shooter I", kShooterI );
-  frc::SmartDashboard::PutNumber( "Shooter D", kShooterD );
-  frc::SmartDashboard::PutNumber( "Shooter S", kShooterS );
-  frc::SmartDashboard::PutNumber( "Shooter G", kShooterG );
-  frc::SmartDashboard::PutNumber( "Shooter V", kShooterV );
-  frc::SmartDashboard::PutNumber( "Shooter A", kShooterA );
 
-  
+  // frc::SmartDashboard::PutNumber( "Arm P", kArmP );
+  // frc::SmartDashboard::PutNumber( "Arm I", kArmI );
+  // frc::SmartDashboard::PutNumber( "Arm D", kArmD );
+  // frc::SmartDashboard::PutNumber( "Arm S", kArmS );
+  // frc::SmartDashboard::PutNumber( "Arm G", kArmG );
+  // frc::SmartDashboard::PutNumber( "Arm V", kArmV );
+  // frc::SmartDashboard::PutNumber( "Arm A", kArmA );
+
+  pid_vals = TuningParameters::Values{ kWristP, kWristI, kWristD, kWristS, kWristG, kWristV, kWristA };
+  TuningParameters::SetSmartDashboardValues( "Wrist", pid_vals );
+
+  // frc::SmartDashboard::PutNumber( "Wrist P", kWristP );
+  // frc::SmartDashboard::PutNumber( "Wrist I", kWristI );
+  // frc::SmartDashboard::PutNumber( "Wrist D", kWristD );
+  // frc::SmartDashboard::PutNumber( "Wrist S", kWristS );
+  // frc::SmartDashboard::PutNumber( "Wrist G", kWristG );
+  // frc::SmartDashboard::PutNumber( "Wrist V", kWristV );
+  // frc::SmartDashboard::PutNumber( "Wrist A", kWristA );
+
+  // frc::SmartDashboard::PutNumber( "Shooter P", kShooterP );
+  // frc::SmartDashboard::PutNumber( "Shooter I", kShooterI );
+  // frc::SmartDashboard::PutNumber( "Shooter D", kShooterD );
+  // frc::SmartDashboard::PutNumber( "Shooter S", kShooterS );
+  // frc::SmartDashboard::PutNumber( "Shooter G", kShooterG );
+  // frc::SmartDashboard::PutNumber( "Shooter V", kShooterV );
+  // frc::SmartDashboard::PutNumber( "Shooter A", kShooterA );
+
+  frc::SmartDashboard::PutBoolean("Config Gains", false);
 
 }
 
 void Robot::RobotPeriodic() {
-  // if(!offsetsSet) {
-  //   if(m_wristEncoder.IsConnected() && m_armEncoder.IsConnected()) {
-  //     m_wristEncoder.SetPositionOffset();
-  //     m_armEncoder.SetPositionOffset();
-  //     offsetsSet = true;
-  //   }
-  // }
+
   wristPos.Refresh();
   wristVel.Refresh();
   wristPosReference.Refresh();
   wristVelReference.Refresh();
+
+  frc::SmartDashboard::PutNumber("Wrist Position", wristPos.GetValueAsDouble() * 360.0);
+  frc::SmartDashboard::PutNumber("Wrist Velocity", wristVel.GetValueAsDouble());
+  frc::SmartDashboard::PutNumber("Wrist Motion Magic Pos", wristPosReference.GetValueAsDouble() * 360.0);
+  frc::SmartDashboard::PutNumber("Wrist Motion Magic Vel", wristVelReference.GetValueAsDouble());
 
   armPos.Refresh();
   armVel.Refresh();
   armPosReference.Refresh();
   armVelReference.Refresh();
 
+  frc::SmartDashboard::PutNumber("Arm Position", armPos.GetValueAsDouble() * 360.0);
+  frc::SmartDashboard::PutNumber("Arm Velocity", armVel.GetValueAsDouble());
+  frc::SmartDashboard::PutNumber("Arm Motion Magic Pos", armPosReference.GetValueAsDouble() * 360.0);
+  frc::SmartDashboard::PutNumber("Arm Motion Magic Vel", armVelReference.GetValueAsDouble());
+
+
   // m_shooterPosition = m_shooterEncoder.GetPosition().GetValueAsDouble() * 360_deg;
-  alpha = m_wristEncoder.GetPosition().GetValueAsDouble() * 360_deg;
+  m_wristAngle = m_wristEncoder.GetPosition().GetValueAsDouble() * 360_deg;
   phi = m_armEncoder.GetPosition().GetValueAsDouble() * 360_deg;
 
-  m_armPosition = alpha - phi;
+  m_armAngle = m_wristAngle - phi;
 
-  frc::SmartDashboard::PutNumber("Alpha", alpha.value());
+  frc::SmartDashboard::PutNumber("Wrist Angle", m_wristAngle.value());
   frc::SmartDashboard::PutNumber("Phi", phi.value());
-  frc::SmartDashboard::PutNumber("Arm Pos", m_armPosition.value());
+  frc::SmartDashboard::PutNumber("Arm Angle", m_armAngle.value());
 
   // frc::SmartDashboard::PutNumber("Wrist Raw Position", m_wristEncoder.GetRawPosition());
   // frc::SmartDashboard::PutNumber("Arm Raw Position", m_armEncoder.GetRawPosition());
-
-  frc::SmartDashboard::PutNumber("Arm Encoder Position", m_armMotor.GetPosition().GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Arm Encoder Velocity", m_armMotor.GetVelocity().GetValueAsDouble());
-
 
   // double elevatorP = frc::SmartDashboard::GetNumber( "Elevator P", 0.0 );
   // double elevatorI = frc::SmartDashboard::GetNumber( "Elevator I", 0.0 );
@@ -152,35 +161,57 @@ void Robot::RobotPeriodic() {
   // double elevatorS = frc::SmartDashboard::GetNumber( "Elevator S", 0.0 );
   // double elevatorA = frc::SmartDashboard::GetNumber( "Elevator A", 0.0 );
 
-  double armP = frc::SmartDashboard::GetNumber( "Arm P", 0.0 );
-  double armI = frc::SmartDashboard::GetNumber( "Arm I", 0.0 );
-  double armD = frc::SmartDashboard::GetNumber( "Arm D", 0.0 );
-  double armG = frc::SmartDashboard::GetNumber( "Arm G", 0.0 );
-  double armV = frc::SmartDashboard::GetNumber( "Arm V", 0.0 );
-  double armS = frc::SmartDashboard::GetNumber( "Arm S", 0.0 );
-  double armA = frc::SmartDashboard::GetNumber( "Arm A", 0.0 );
+  TuningParameters::Values arm_vals = TuningParameters::GetSmartDashboardValues( "Arm" );
+  // double armP = frc::SmartDashboard::GetNumber( "Arm P", 0.0 );
+  // double armI = frc::SmartDashboard::GetNumber( "Arm I", 0.0 );
+  // double armD = frc::SmartDashboard::GetNumber( "Arm D", 0.0 );
+  // double armG = frc::SmartDashboard::GetNumber( "Arm G", 0.0 );
+  // double armV = frc::SmartDashboard::GetNumber( "Arm V", 0.0 );
+  // double armS = frc::SmartDashboard::GetNumber( "Arm S", 0.0 );
+  // double armA = frc::SmartDashboard::GetNumber( "Arm A", 0.0 );
 
-  double wristP = frc::SmartDashboard::GetNumber( "Wrist P", 0.0 );
-  double wristI = frc::SmartDashboard::GetNumber( "Wrist I", 0.0 );
-  double wristD = frc::SmartDashboard::GetNumber( "Wrist D", 0.0 );
-  double wristG = frc::SmartDashboard::GetNumber( "Wrist G", 0.0 );
-  double wristV = frc::SmartDashboard::GetNumber( "Wrist V", 0.0 );
-  double wristS = frc::SmartDashboard::GetNumber( "Wrist S", 0.0 );
-  double wristA = frc::SmartDashboard::GetNumber( "Wrist A", 0.0 );
+  TuningParameters::Values wrist_vals = TuningParameters::GetSmartDashboardValues( "Wrist" );
+  // double wristP = frc::SmartDashboard::GetNumber( "Wrist P", 0.0 );
+  // double wristI = frc::SmartDashboard::GetNumber( "Wrist I", 0.0 );
+  // double wristD = frc::SmartDashboard::GetNumber( "Wrist D", 0.0 );
+  // double wristG = frc::SmartDashboard::GetNumber( "Wrist G", 0.0 );
+  // double wristV = frc::SmartDashboard::GetNumber( "Wrist V", 0.0 );
+  // double wristS = frc::SmartDashboard::GetNumber( "Wrist S", 0.0 );
+  // double wristA = frc::SmartDashboard::GetNumber( "Wrist A", 0.0 );
 
   bool configGains = frc::SmartDashboard::GetBoolean("Config Gains", false);
 
   if (configGains) {
-    ctre::phoenix6::configs::TalonFXConfiguration armPIDConfigs{};
-    armPIDConfigs.Slot0.kV = armV;
-    armPIDConfigs.Slot0.kP = armP;
-    armPIDConfigs.Slot0.kI = armI;
-    armPIDConfigs.Slot0.kD = armD;
-    m_armMotor.GetConfigurator().Apply(armPIDConfigs);
+
+    ctre::phoenix6::configs::TalonFXConfiguration wristConfigs{};
+    wristConfigs.Slot0.kP = wrist_vals.kP;
+    wristConfigs.Slot0.kI = wrist_vals.kI;
+    wristConfigs.Slot0.kD = wrist_vals.kD;
+    wristConfigs.Slot0.kG = wrist_vals.kG;
+    wristConfigs.Slot0.kV = wrist_vals.kV;
+    wristConfigs.Slot0.kS = wrist_vals.kS;
+    wristConfigs.Slot0.kA = wrist_vals.kA;
+    m_wristMotor.GetConfigurator().Apply(wristConfigs, 50_ms);
+
+    // ctre::phoenix6::configs::TalonFXConfiguration armPIDConfigs{};
+    // armPIDConfigs.Slot0.kP = armP;
+    // armPIDConfigs.Slot0.kI = armI;
+    // armPIDConfigs.Slot0.kD = armD;
+    // armPIDConfigs.Slot0.kV = armV;
+    // m_armMotor.GetConfigurator().Apply(armPIDConfigs);
+
+    m_armPID.SetP( arm_vals.kP );
+    m_armPID.SetI( arm_vals.kI );
+    m_armPID.SetD( arm_vals.kD );
+    delete m_armFeedforward;
+
+    m_armFeedforward = new frc::ArmFeedforward{units::volt_t{arm_vals.kS}, units::volt_t{arm_vals.kG}, 
+                                        units::unit_t<frc::ArmFeedforward::kv_unit> {arm_vals.kV}, 
+                                        units::unit_t<frc::ArmFeedforward::ka_unit> {arm_vals.kA}};
+
     frc::SmartDashboard::PutBoolean("Config Gains", false);
-  } else {
-    frc::SmartDashboard::PutBoolean("Config Gains", false);
-  }
+    fmt::print(" Gain Values written...\n" );
+  } 
 
   // double shooterP = frc::SmartDashboard::GetNumber( "Shooter P", 0.0 );
   // double shooterI = frc::SmartDashboard::GetNumber( "Shooter I", 0.0 );
@@ -220,16 +251,11 @@ void Robot::RobotPeriodic() {
   // }
 
   if ( frc::DriverStation::IsDisabled() ) {
-    m_armSetpoint.position = m_armPosition;
+    m_armSetpoint.position = m_armAngle;
     m_armSetpoint.velocity = 0_deg_per_s;
-    m_armAngleGoal = m_armPosition;
 
-    m_wristSetpoint.position = alpha;
-    m_wristSetpoint.velocity = 0_deg_per_s;
-    m_wristAngleGoal = m_wristPosition;
-
-    thetaSetpoint = m_armPosition;
-    alphaSetpoint = alpha;
+    m_wristGoal.position = m_wristAngle;
+    m_wristGoal.velocity = 0_deg_per_s;
   }
 }
 
@@ -263,67 +289,60 @@ void Robot::TeleopPeriodic() {
 
   // frc::SmartDashboard::PutNumber("Shooter Velocity", m_shooterVel.GetVelocity() / 48.0 / 10.0 * 24.0 / 36.0 * 360.0 / 60.0 );
 
-  if(m_xbox.GetAButton()){
-    m_armGoal = {10_deg, 0_deg_per_s};
-    m_wristGoal = {-60_deg, 0_deg_per_s};
+  // if(m_xbox.GetAButton()){
+  //   m_armGoal = {10_deg, 0_deg_per_s};
+  //   m_wristGoal = {-60_deg, 0_deg_per_s};
+  // } else if (m_xbox.GetBButton()) {
+  //   m_armGoal = {120_deg, 0_deg_per_s}; 
+  //   m_wristGoal = {0_deg, 0_deg_per_s};
+  // } else if (m_xbox.GetXButton()) {
+  //   m_armGoal = {135_deg, 0_deg_per_s}; 
+  //   m_wristGoal = {150_deg, 0_deg_per_s};
+  // }
+  
+   if(m_xbox.GetAButton()){
+    m_wristGoal = {-90_deg, 0_deg_per_s};
   } else if (m_xbox.GetBButton()) {
-    m_armGoal = {120_deg, 0_deg_per_s}; 
     m_wristGoal = {0_deg, 0_deg_per_s};
   } else if (m_xbox.GetXButton()) {
-    m_armGoal = {135_deg, 0_deg_per_s}; 
-    m_wristGoal = {150_deg, 0_deg_per_s};
+    m_armGoal = {0_deg, 0_deg_per_s}; 
+  } else if (m_xbox.GetYButton()) {
+    m_armGoal = {45_deg, 0_deg_per_s}; 
   }
-  
-    
-  m_wristSetpoint = m_wristProfile.Calculate(20_ms, m_wristSetpoint, m_wristGoal);
+
+  // m_wristSetpoint = m_wristProfile.Calculate(20_ms, m_wristSetpoint, m_wristGoal);
   m_armSetpoint = m_armProfile.Calculate(20_ms, m_armSetpoint, m_armGoal);
 
-  frc::SmartDashboard::PutNumber("Wrist Setpoint Position", m_wristSetpoint.position.value());
-  frc::SmartDashboard::PutNumber("Wrist Setpoint Velocity", m_wristSetpoint.velocity.value());
+  frc::SmartDashboard::PutNumber("Wrist Goal Position", m_wristGoal.position.value());
+ 
+   // double wristOutput = m_wristPID.Calculate(alpha.value(), m_wristSetpoint.position.value());
+  // double wristFeedforwardOut = m_wristFeedforward.Calculate(alpha, m_wristSetpoint.velocity).value();
 
+  // m_wristMotor.Set(wristOutput + wristFeedforwardOut / 12.0);
+  // if(m_xbox.GetAButton()) {
+  //   alphaSetpoint = -90_deg;
+  // } else if (m_xbox.GetBButton()) {
+  //   alphaSetpoint = 0_deg;
+  // }
+
+  m_wristMotor.SetControl( m_wristPositionDC.WithPosition( m_wristGoal.position ) );  
+
+  double armOutput = m_armPID.Calculate( m_armAngle.value(), m_armSetpoint.position.value() );
+  double armFeedforwardOut = m_armFeedforward->Calculate( m_armSetpoint.position, m_armSetpoint.velocity).value() 
+                             + kArmWristG * units::math::cos(m_wristAngle).value();
+
+  frc::SmartDashboard::PutNumber("Arm PID Out", armOutput);
+  frc::SmartDashboard::PutNumber("Arm Feedforward Out", armFeedforwardOut);
   frc::SmartDashboard::PutNumber("Arm Setpoint Position", m_armSetpoint.position.value());
   frc::SmartDashboard::PutNumber("Arm Setpoint Velocity", m_armSetpoint.velocity.value());
 
+  m_armMotor.Set( armOutput + armFeedforwardOut / 12.0 );
 
-  double wristOutput = m_wristPID.Calculate(alpha.value(), m_wristSetpoint.position.value());
-  double wristFeedforwardOut = m_wristFeedforward.Calculate(alpha, m_wristSetpoint.velocity).value();
-
-  // m_wristMotor.Set(wristOutput + wristFeedforwardOut / 12.0);
-  if(m_xbox.GetAButton()) {
-    alphaSetpoint = -90_deg;
-  } else if (m_xbox.GetBButton()) {
-    alphaSetpoint = 0_deg;
-  }
-  m_wristMotor.SetControl(m_wristPositionDC.WithPosition(alphaSetpoint));
-
-  frc::SmartDashboard::PutNumber("Wrist Position", wristPos.GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Wrist Velocity", wristVel.GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Wrist Motion Magic Pos", wristPosReference.GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Wrist Motion Magic Vel", wristVelReference.GetValueAsDouble());
-  
-
-  // double armOutput = m_armPID.Calculate(m_armPosition.value(), m_armSetpoint.position.value());
-  // double armFeedforwardOut = m_armFeedforward.Calculate(m_armSetpoint.position, m_armSetpoint.velocity).value() + kArmWristG * units::math::cos(alpha).value();
-
-  // frc::SmartDashboard::PutNumber("Arm PID Out", armOutput);
+  // double armFeedforwardOut = kArmG * units::math::cos(m_armPosition) + kArmWristG * units::math::cos(alpha);
   // frc::SmartDashboard::PutNumber("Arm Feedforward Out", armFeedforwardOut);
+  // m_armMotor.SetControl(m_armPositionDC.WithPosition(alpha + thetaSetpoint).WithFeedForward(armFeedforwardOut));
 
-  //m_armMotor.Set(armOutput + armFeedforwardOut / 12.0);
-
-  double armFeedforwardOut = kArmG * units::math::cos(m_armPosition) + kArmWristG * units::math::cos(alpha);
-  frc::SmartDashboard::PutNumber("Arm Feedforward Out", armFeedforwardOut);
-  if(m_xbox.GetXButton()) {
-    thetaSetpoint = 0_deg;
-  } else if(m_xbox.GetYButton()) {
-    thetaSetpoint = 45_deg;
-  }
-  m_armMotor.SetControl(m_armPositionDC.WithPosition(alpha + thetaSetpoint).WithFeedForward(armFeedforwardOut));
-
-  frc::SmartDashboard::PutNumber("Arm Position", armPos.GetValueAsDouble() * 360.0);
-  frc::SmartDashboard::PutNumber("Arm Velocity", armVel.GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Arm Motion Magic Pos", armPosReference.GetValueAsDouble() * 360.0);
-  frc::SmartDashboard::PutNumber("Arm Motion Magic Vel", armVelReference.GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Phi Setpoint", (alpha + thetaSetpoint).value() );
+  // frc::SmartDashboard::PutNumber("Phi Setpoint", (alpha + thetaSetpoint).value() );
 }
 
 void Robot::DisabledInit() {}
@@ -340,3 +359,57 @@ int main() {
   return frc::StartRobot<Robot>();
 }
 #endif
+
+
+void TuningParameters::SetSmartDashboardValues( const std::string_view &name, const Values &v ) {
+  std::string item_name;
+  
+  item_name = std::string{name} + " P";
+  frc::SmartDashboard::PutNumber( item_name, v.kP );
+
+  item_name = std::string{name} + " I";
+  frc::SmartDashboard::PutNumber( item_name, v.kI );
+
+  item_name = std::string{name} + " D";
+  frc::SmartDashboard::PutNumber( item_name, v.kD );
+
+  item_name = std::string{name} + " S";
+  frc::SmartDashboard::PutNumber( item_name, v.kS );
+
+  item_name = std::string{name} + " G";
+  frc::SmartDashboard::PutNumber( item_name, v.kG );
+
+  item_name = std::string{name} + " V";
+  frc::SmartDashboard::PutNumber( item_name, v.kV );
+
+  item_name = std::string{name} + " A";
+  frc::SmartDashboard::PutNumber( item_name, v.kA );
+}
+
+TuningParameters::Values TuningParameters::GetSmartDashboardValues( const std::string_view &name ) {
+  TuningParameters::Values v;
+  std::string item_name;
+
+  item_name = std::string{name} + " P";
+  v.kP = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  item_name = std::string{name} + " I";
+  v.kI = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  item_name = std::string{name} + " D";
+  v.kD = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  item_name = std::string{name} + " S";
+  v.kS = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  item_name = std::string{name} + " G";
+  v.kG = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  item_name = std::string{name} + " V";
+  v.kV = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  item_name = std::string{name} + " A";
+  v.kA = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+
+  return v;
+}

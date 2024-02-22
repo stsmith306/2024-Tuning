@@ -100,20 +100,16 @@ class Robot : public frc::TimedRobot {
   ctre::phoenix6::StatusSignal<double> wristPosReference = m_wristMotor.GetClosedLoopReference();
   ctre::phoenix6::StatusSignal<double> wristVelReference = m_wristMotor.GetClosedLoopReferenceSlope();
 
-  frc::PIDController m_wristPID{ kWristP, kWristI, kWristD };
-  frc::ArmFeedforward m_wristFeedforward{ units::volt_t{ kWristS }, units::volt_t{ kWristG }, 
-                                        units::unit_t<frc::ArmFeedforward::kv_unit> { kWristV }, 
-                                        units::unit_t<frc::ArmFeedforward::ka_unit> { kWristA } };
+ // frc::PIDController m_wristPID{ kWristP, kWristI, kWristD };
+ // frc::ArmFeedforward m_wristFeedforward{ units::volt_t{ kWristS }, units::volt_t{ kWristG }, 
+ //                                       units::unit_t<frc::ArmFeedforward::kv_unit> { kWristV }, 
+ //                                       units::unit_t<frc::ArmFeedforward::ka_unit> { kWristA } };
 
-  frc::TrapezoidProfile<units::degrees> m_wristProfile{{360_deg_per_s, 360_deg_per_s_sq}};
+ // frc::TrapezoidProfile<units::degrees> m_wristProfile{{360_deg_per_s, 360_deg_per_s_sq}};
+  // frc::TrapezoidProfile<units::degrees>::State m_wristSetpoint;
   frc::TrapezoidProfile<units::degrees>::State m_wristGoal;
-  frc::TrapezoidProfile<units::degrees>::State m_wristSetpoint;
 
-  units::degree_t m_wristAngleGoal;
-  units::degree_t m_wristPosition;
-  units::degree_t alpha;
-  units::degree_t alphaSetpoint;
-
+  units::degree_t m_wristAngle;
 
   ctre::phoenix6::hardware::TalonFX m_armMotor{21};
   ctre::phoenix6::hardware::CANcoder m_armEncoder{23};
@@ -124,18 +120,15 @@ class Robot : public frc::TimedRobot {
   ctre::phoenix6::StatusSignal<double> armVelReference = m_armMotor.GetClosedLoopReferenceSlope();
 
   frc::PIDController m_armPID{kArmP, kArmI, kArmD};
-  frc::ArmFeedforward m_armFeedforward{units::volt_t{kArmS}, units::volt_t{kArmG}, 
-                                        units::unit_t<frc::ArmFeedforward::kv_unit> {kArmV}, 
-                                        units::unit_t<frc::ArmFeedforward::ka_unit> {kArmA}};
+  frc::ArmFeedforward *m_armFeedforward;
   
   frc::TrapezoidProfile<units::degrees> m_armProfile{{360_deg_per_s, 360_deg_per_s_sq}};
   frc::TrapezoidProfile<units::degrees>::State m_armGoal;
   frc::TrapezoidProfile<units::degrees>::State m_armSetpoint{};
 
-  units::degree_t m_armAngleGoal;
-  units::degree_t m_armPosition;
+  units::degree_t m_armAngle;
   units::degree_t phi;
-  units::degree_t thetaSetpoint;
+ 
 
 
 
@@ -162,3 +155,20 @@ class Robot : public frc::TimedRobot {
 
   frc::XboxController m_xbox{1};
 };
+
+class TuningParameters {
+  public:
+    struct Values {
+      double kP;
+      double kI;
+      double kD;
+      double kS;
+      double kG;
+      double kV;
+      double kA;
+    };
+    static void SetSmartDashboardValues( const std::string_view &name, const Values &v );
+    static Values GetSmartDashboardValues( const std::string_view &name );
+
+};
+
