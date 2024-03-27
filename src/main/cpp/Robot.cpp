@@ -18,15 +18,19 @@ void Robot::RobotInit() {
   // m_topShooterMotor.SetInverted(true);
   // m_bottomShooterMotor.SetInverted(true);
   // m_bottomShooterMotor.Follow(m_topShooterMotor);
+      constexpr double kShooterAbsoluteOffset = -0.068;
+    constexpr double kWristAbsoluteOffset = 0.314;
+    constexpr double kArmAbsoluteOffset = -0.243;
+
 
   ctre::phoenix6::configs::CANcoderConfiguration wristAbsoluteEncoderConfigs{};
   wristAbsoluteEncoderConfigs.MagnetSensor.SensorDirection = true;
-  wristAbsoluteEncoderConfigs.MagnetSensor.MagnetOffset = 0.145;
+  wristAbsoluteEncoderConfigs.MagnetSensor.MagnetOffset = kWristAbsoluteOffset;
   m_wristEncoder.GetConfigurator().Apply(wristAbsoluteEncoderConfigs, 50_ms);
 
   ctre::phoenix6::configs::CANcoderConfiguration armAbsoluteEncoderConfigs{};
   armAbsoluteEncoderConfigs.MagnetSensor.SensorDirection = true;
-  armAbsoluteEncoderConfigs.MagnetSensor.MagnetOffset = 0.081;
+  armAbsoluteEncoderConfigs.MagnetSensor.MagnetOffset = kArmAbsoluteOffset;
   m_armEncoder.GetConfigurator().Apply(armAbsoluteEncoderConfigs, 50_ms);
 
   m_armMotor.GetConfigurator().Apply(ctre::phoenix6::configs::TalonFXConfiguration{});
@@ -84,6 +88,8 @@ void Robot::RobotInit() {
 
   pid_vals = TuningParameters::Values{ kArmP, kArmI, kArmD, kArmS, kArmG, kArmV, kArmA };
   TuningParameters::SetSmartDashboardValues( "Arm", pid_vals );
+  ArmWristG = kArmWristG;
+  frc::SmartDashboard::PutNumber( "ArmWristG", ArmWristG ); 
 
 
   // frc::SmartDashboard::PutNumber( "Arm P", kArmP );
@@ -131,14 +137,10 @@ void Robot::RobotPeriodic() {
 
   armPos.Refresh();
   armVel.Refresh();
-  armPosReference.Refresh();
-  armVelReference.Refresh();
 
   frc::SmartDashboard::PutNumber("Arm Position", armPos.GetValueAsDouble() * 360.0);
-  frc::SmartDashboard::PutNumber("Arm Velocity", armVel.GetValueAsDouble());
-  frc::SmartDashboard::PutNumber("Arm Motion Magic Pos", armPosReference.GetValueAsDouble() * 360.0);
-  frc::SmartDashboard::PutNumber("Arm Motion Magic Vel", armVelReference.GetValueAsDouble());
-
+  frc::SmartDashboard::PutNumber("Arm Velocity", armVel.GetValueAsDouble() * 360 );
+ 
 
   // m_shooterPosition = m_shooterEncoder.GetPosition().GetValueAsDouble() * 360_deg;
   m_wristAngle = m_wristEncoder.GetPosition().GetValueAsDouble() * 360_deg;
@@ -162,6 +164,7 @@ void Robot::RobotPeriodic() {
   // double elevatorA = frc::SmartDashboard::GetNumber( "Elevator A", 0.0 );
 
   TuningParameters::Values arm_vals = TuningParameters::GetSmartDashboardValues( "Arm" );
+  ArmWristG = frc::SmartDashboard::GetNumber( "ArmWristG", 0.0 ); 
   // double armP = frc::SmartDashboard::GetNumber( "Arm P", 0.0 );
   // double armI = frc::SmartDashboard::GetNumber( "Arm I", 0.0 );
   // double armD = frc::SmartDashboard::GetNumber( "Arm D", 0.0 );
@@ -184,6 +187,7 @@ void Robot::RobotPeriodic() {
   if (configGains) {
 
     ctre::phoenix6::configs::TalonFXConfiguration wristConfigs{};
+    m_wristMotor.GetConfigurator().Refresh( wristConfigs );
     wristConfigs.Slot0.kP = wrist_vals.kP;
     wristConfigs.Slot0.kI = wrist_vals.kI;
     wristConfigs.Slot0.kD = wrist_vals.kD;
@@ -253,9 +257,11 @@ void Robot::RobotPeriodic() {
   if ( frc::DriverStation::IsDisabled() ) {
     m_armSetpoint.position = m_armAngle;
     m_armSetpoint.velocity = 0_deg_per_s;
+    m_armGoal = {m_armAngle, 0_deg_per_s}; 
 
     m_wristGoal.position = m_wristAngle;
     m_wristGoal.velocity = 0_deg_per_s;
+    m_wristGoal = {m_wristAngle, 0_deg_per_s};
   }
 }
 
@@ -301,13 +307,16 @@ void Robot::TeleopPeriodic() {
   // }
   
    if(m_xbox.GetAButton()){
-    m_wristGoal = {-90_deg, 0_deg_per_s};
+    m_armGoal = {-8_deg, 0_deg_per_s}; 
+    m_wristGoal = {-35_deg, 0_deg_per_s};
   } else if (m_xbox.GetBButton()) {
-    m_wristGoal = {0_deg, 0_deg_per_s};
-  } else if (m_xbox.GetXButton()) {
-    m_armGoal = {0_deg, 0_deg_per_s}; 
+    m_armGoal = {170_deg, 0_deg_per_s}; 
+    m_wristGoal = {35_deg, 0_deg_per_s};
+  // } else if (m_xbox.GetXButton()) {
+  //   m_armGoal = {0_deg, 0_deg_per_s}; 
   } else if (m_xbox.GetYButton()) {
-    m_armGoal = {45_deg, 0_deg_per_s}; 
+    m_armGoal = {160_deg, 0_deg_per_s}; 
+    m_wristGoal = {130_deg, 0_deg_per_s};
   }
 
   // m_wristSetpoint = m_wristProfile.Calculate(20_ms, m_wristSetpoint, m_wristGoal);
@@ -329,7 +338,7 @@ void Robot::TeleopPeriodic() {
 
   double armOutput = m_armPID.Calculate( m_armAngle.value(), m_armSetpoint.position.value() );
   double armFeedforwardOut = m_armFeedforward->Calculate( m_armSetpoint.position, m_armSetpoint.velocity).value() 
-                             + kArmWristG * units::math::cos(m_wristAngle).value();
+                             + ArmWristG * units::math::cos(m_wristAngle).value();
 
   frc::SmartDashboard::PutNumber("Arm PID Out", armOutput);
   frc::SmartDashboard::PutNumber("Arm Feedforward Out", armFeedforwardOut);

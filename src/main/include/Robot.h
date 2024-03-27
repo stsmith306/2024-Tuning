@@ -50,23 +50,47 @@ class Robot : public frc::TimedRobot {
   double kElevatorV = 0.0;
   double kElevatorA = 0.0;
 
+    // constexpr double kArmP = 0.002;
+    // constexpr double kArmI = 0.0;
+    // constexpr double kArmD = 0.0;
+
+    // constexpr double kArmS = 0.0;
+    // constexpr double kArmG = 0.15;
+    // constexpr double kArmWristG = 0.07;
+    // constexpr double kArmV = 1.1;
+    // constexpr double kArmA = 0.0;
+
+
+  double kArmP = 0.006;
+  double kArmI = 0.0;
+  double kArmD = 0.0;
+
+  double kArmS = 0.0;
+  double kArmG = 0.3;
+  double kArmWristG = 0.01;
+  double kArmV = 1.1;
+  double kArmA = 0.0;
+
+
+    // constexpr double kWristP = 1.0;
+    // constexpr double kWristI = 0.0;
+    // constexpr double kWristD = 0.0;
+
+    // constexpr double kWristS = 0.0;
+    // constexpr double kWristG = 0.0115;
+    // constexpr double kWristV = 0.65;
+    // constexpr double kWristA = 0.0;
+
   double kWristP = 1.0;
   double kWristI = 0.0;
   double kWristD = 0.0;
+
   double kWristS = 0.0;
   double kWristG = 0.0115;
   double kWristV = 0.65;
   double kWristA = 0.0;
 
-  double kArmP = 0.0;
-  double kArmI = 0.0;
-  double kArmD = 0.0;
-  double kArmS = 0.0;
-  double kArmG = 0.021;
-  double kArmWristG = 0.0;
-  double kArmV = 0.5;
-  double kArmA = 0.0;
-
+ 
   double kShooterP = 0.01;
   double kShooterI = 0.0;
   double kShooterD = 0.0;
@@ -129,7 +153,7 @@ class Robot : public frc::TimedRobot {
   units::degree_t m_armAngle;
   units::degree_t phi;
  
-
+  double ArmWristG;
 
 
   // rev::CANSparkFlex m_topShooterMotor{14, rev::CANSparkFlex::MotorType::kBrushless};
