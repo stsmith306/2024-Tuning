@@ -6,12 +6,12 @@
 
 using namespace tuning;
 
-ParameterUI::ParameterUI( std::string tab, std::string name, tuning::Parameters p )
-    : m_tab{tab}, m_name{name}, m_params{p} {
+ParametersUI::ParametersUI( std::string tab, std::string name, tuning::Parameters p )
+    : m_params{p}, m_tab{tab}, m_name{name} {
 
 }
 
-void ParameterUI::PutNTValues( ) {
+void ParametersUI::PutNTValues( ) {
   std::string item_name;
   
   item_name = std::string{m_name} + " P";
@@ -36,32 +36,65 @@ void ParameterUI::PutNTValues( ) {
   frc::SmartDashboard::PutNumber( item_name, m_params.kA );
 }
 
-tuning::Parameters ParameterUI::GetNTValues( ) {
-  tuning::Parameters v;
+tuning::Parameters ParametersUI::GetNTValues( ) {
   std::string item_name;
 
   item_name = std::string{m_name} + " P";
-  v.kP = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kP = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
   item_name = std::string{m_name} + " I";
-  v.kI = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kI = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
   item_name = std::string{m_name} + " D";
-  v.kD = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kD = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
   item_name = std::string{m_name} + " S";
-  v.kS = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kS = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
   item_name = std::string{m_name} + " G";
-  v.kG = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kG = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
   item_name = std::string{m_name} + " V";
-  v.kV = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kV = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
   item_name = std::string{m_name} + " A";
-  v.kA = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kA = frc::SmartDashboard::GetNumber( item_name, 0.0 );
 
-  return v;
+  return m_params;
+}
+
+MotionProfileUI::MotionProfileUI( std::string tab, std::string name, tuning::MotionProfile p )
+    :  m_prof{p}, m_tab{tab}, m_name{name} {
+
+}
+
+void MotionProfileUI::PutNTValues( ) {
+  std::string item_name;
+  
+  item_name = std::string{m_name} + " MaxVelocity";
+  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxVelocity.value() );
+
+  item_name = std::string{m_name} + " MaxAccel";
+  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxAcceleration.value() );
+
+  item_name = std::string{m_name} + " MaxJerk";
+  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxJerk.value() );
+
+}
+
+tuning::MotionProfile MotionProfileUI::GetNTValues( ) {
+  std::string item_name;
+
+  item_name = std::string{m_name} + " MaxVelocity";
+  m_prof.MaxVelocity = frc::SmartDashboard::GetNumber( item_name, 0.0 ) * 1_deg_per_s;
+
+  item_name = std::string{m_name} + " MaxAccel";
+  m_prof.MaxAcceleration = frc::SmartDashboard::GetNumber( item_name, 0.0 ) * 1_deg_per_s_sq;
+
+  item_name = std::string{m_name} + " MaxJerk";
+  m_prof.MaxJerk = frc::SmartDashboard::GetNumber( item_name, 0.0 ) * 1_deg_per_s_cu;
+
+  return m_prof;
 }
 
 MotorTuner::MotorTuner( std::string_view name, tuning::Parameters p, 

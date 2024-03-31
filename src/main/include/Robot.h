@@ -38,35 +38,19 @@ class Robot : public frc::TimedRobot {
   // double kElevatorV = 0.0;
   // double kElevatorA = 0.0;
 
-    // constexpr double kArmP = 0.002;
-    // constexpr double kArmI = 0.0;
-    // constexpr double kArmD = 0.0;
-
-    // constexpr double kArmS = 0.0;
-    // constexpr double kArmG = 0.15;
-    // constexpr double kArmWristG = 0.07;
-    // constexpr double kArmV = 1.1;
-    // constexpr double kArmA = 0.0;
 
   tuning::Parameters kArm = {
     0.006, 0.0, 0.0, 0.0, 0.3, 1.1, 0.0 };
-  double kArmWristG = 0.01;
 
-  tuning::ParameterUI armUI{ "ArmSubsystem", "Arm Angle", kArm };
-
-    // constexpr double kWristP = 1.0;
-    // constexpr double kWristI = 0.0;
-    // constexpr double kWristD = 0.0;
-
-    // constexpr double kWristS = 0.0;
-    // constexpr double kWristG = 0.0115;
-    // constexpr double kWristV = 0.65;
-    // constexpr double kWristA = 0.0;
+  tuning::ParametersUI armUI{ "ArmSubsystem", "Arm Angle", kArm };
+  tuning::MotionProfileUI armMPUI{ "ArmSubsystem", "Arm Angle", {540_deg_per_s, 720_deg_per_s_sq, 0_deg_per_s_cu} };
 
   tuning::Parameters kWrist = {
     1.0, 0.0, 0.0, 0.0, 0.0115, 0.65, 0.0 };
+  double kArmWristG = 0.01;
 
-  tuning::ParameterUI wristUI{ "ArmSubsystem", "Wrist Angle", kWrist };
+  tuning::ParametersUI wristUI{ "ArmSubsystem", "Wrist Angle", kWrist };
+  tuning::MotionProfileUI wristMPUI{ "ArmSubsystem", "Wrist Angle", {540_deg_per_s, 1080_deg_per_s_sq, 2000_deg_per_s_cu} };
 
  
   // double kShooterP = 0.01;
@@ -137,21 +121,5 @@ class Robot : public frc::TimedRobot {
 
 
   frc::XboxController m_xbox{1};
-};
-
-class TuningParameters_old {
-  public:
-    struct Values {
-      double kP;
-      double kI;
-      double kD;
-      double kS;
-      double kG;
-      double kV;
-      double kA;
-    };
-    static void SetSmartDashboardValues( const std::string_view &name, const Values &v );
-    static Values GetSmartDashboardValues( const std::string_view &name );
-
 };
 

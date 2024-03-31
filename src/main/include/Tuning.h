@@ -28,16 +28,31 @@ public:
     units::degrees_per_second_cubed_t MaxJerk;
 };
 
-class ParameterUI {
+class ParametersUI {
 public:
-    ParameterUI( std::string tab, std::string name, tuning::Parameters p );
+    ParametersUI( std::string tab, std::string name, tuning::Parameters p );
 
     void PutNTValues( );
     tuning::Parameters GetNTValues( );
+
+    tuning::Parameters m_params;
+
 private:
     std::string m_tab;
     std::string m_name;
-    tuning::Parameters m_params;
+};
+
+class MotionProfileUI {
+public:
+    MotionProfileUI( std::string tab, std::string name, tuning::MotionProfile p );
+
+    void PutNTValues( );
+    tuning::MotionProfile GetNTValues( );
+
+    tuning::MotionProfile m_prof;
+private:
+    std::string m_tab;
+    std::string m_name;
 };
 
 enum MechanismType { Simple, Elevator, Arm };
@@ -48,7 +63,10 @@ public:
     MotorTuner( std::string_view name, tuning::Parameters p, 
                 tuning::MechanismType mech, tuning::ControlType ctrl );
 
+        // Update and provide the position to use for control.
     void Update( units::degree_t position, double arbFF = 0.0 );
+
+        // Update and use the default encoder for position control.
     void Update( double arbFF = 0.0 );
 
     virtual void SetGoal( frc::TrapezoidProfile<units::degrees>::State goal );

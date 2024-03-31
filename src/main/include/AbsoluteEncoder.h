@@ -36,7 +36,16 @@ public:
     SRXMagEncoder( std::string_view pref_name, const int DIO_Channel ) : AbsoluteEncoder( pref_name ),
                     m_Encoder{DIO_Channel}
     {
-          m_read_once = false;  
+          m_read_once = false; 
+
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
+          fmt::print(" SRXMagEncoder class IS INCOMPLETE!!!!  DO NOT USE !!!!!!!!!!!!\n");
     }
 
     // Returns the angle in degrees
