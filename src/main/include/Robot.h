@@ -20,7 +20,7 @@
 
 
 #include "CTRETuner.h"
-#include "AbsoluteEncoder.h"
+#include "CTRECANcoder.h"
 
 class Robot : public frc::TimedRobot {
  public:
@@ -39,18 +39,14 @@ class Robot : public frc::TimedRobot {
   // double kElevatorA = 0.0;
 
 
-  tuning::Parameters kArm = {
-    0.006, 0.0, 0.0, 0.0, 0.3, 1.1, 0.0 };
+  tuning::Parameters kArm{ 0.006, 0.0, 0.0, 0.0, 0.3, 1.1, 0.0 };
+  tuning::AngularMotionProfile kArm_MP{540_deg_per_s, 720_deg_per_s_sq, 0_deg_per_s_cu};
+  tuning::AngularTuningUI armUI{ "ArmSubsystem", "Arm", kArm, kArm_MP };
 
-  tuning::ParametersUI armUI{ "ArmSubsystem", "Arm Angle", kArm };
-  tuning::MotionProfileUI armMPUI{ "ArmSubsystem", "Arm Angle", {540_deg_per_s, 720_deg_per_s_sq, 0_deg_per_s_cu} };
-
-  tuning::Parameters kWrist = {
-    1.0, 0.0, 0.0, 0.0, 0.0115, 0.65, 0.0 };
+  tuning::Parameters kWrist{ 1.0, 0.0, 0.0, 0.0, 0.0115, 0.65, 0.0 };
   double kArmWristG = 0.01;
-
-  tuning::ParametersUI wristUI{ "ArmSubsystem", "Wrist Angle", kWrist };
-  tuning::MotionProfileUI wristMPUI{ "ArmSubsystem", "Wrist Angle", {540_deg_per_s, 1080_deg_per_s_sq, 2000_deg_per_s_cu} };
+  tuning::AngularMotionProfile kWrist_MP{540_deg_per_s, 1080_deg_per_s_sq, 2000_deg_per_s_cu};
+  tuning::AngularTuningUI wristUI{ "ArmSubsystem", "Wrist", kWrist, kWrist_MP };
 
  
   // double kShooterP = 0.01;
@@ -72,11 +68,11 @@ class Robot : public frc::TimedRobot {
   // bool offsetsSet = false;
 
 
-  TalonFXTuner m_wristMotor{ "Wrist", 22, "", kWrist, tuning::Arm, tuning::OnBoard};
-  CTRECANCoder m_wristEncoder{ "Wrist Encoder", 24 };
+  AngularTalonFXTuner m_wristMotor{ "Wrist", 22, "", kWrist, tuning::Arm, tuning::OnBoard};
+  CTRECANcoder m_wristEncoder{ "Wrist Encoder", 24 };
 
-  TalonFXTuner m_armMotor{ "Arm", 21, "", kArm, tuning::Arm, tuning::Software };
-  CTRECANCoder m_armEncoder{ "Arm Encoder", 23 };
+  AngularTalonFXTuner m_armMotor{ "Arm", 21, "", kArm, tuning::Arm, tuning::Software };
+  CTRECANcoder m_armEncoder{ "Arm Encoder", 23 };
 
  // frc::PIDController m_wristPID{ kWristP, kWristI, kWristD };
  // frc::ArmFeedforward m_wristFeedforward{ units::volt_t{ kWristS }, units::volt_t{ kWristG }, 

@@ -26,10 +26,10 @@ void Robot::RobotInit() {
   m_wristEncoder.SensorDirection( true );
 
   m_armMotor.SetInverted( true );
-  m_armMotor.SetMotionProfile( armMPUI.m_prof );
+  m_armMotor.SetMotionProfile( armUI.m_prof );
 
   m_wristMotor.LinkCANCoder( m_wristEncoder.GetChannel() );
-  m_wristMotor.SetMotionProfile( wristMPUI.m_prof );
+  m_wristMotor.SetMotionProfile( wristUI.m_prof );
 
 
   // TuningParameters::Values pid_vals;
@@ -37,10 +37,8 @@ void Robot::RobotInit() {
   // //                                    kElevatorS, kElevatorG, kElevatorV, kElevatorA };
   // // TuningParameters::SetSmartDashboardValues( "Elevator", pid_vals );
 
-  armUI.PutNTValues();
-  armMPUI.PutNTValues();
-  wristUI.PutNTValues();
-  wristMPUI.PutNTValues();
+  armUI.Refresh();
+  wristUI.Refresh();
 
   ArmWristG = kArmWristG;
   frc::SmartDashboard::PutNumber( "ArmWristG", ArmWristG ); 
@@ -54,6 +52,7 @@ void Robot::RobotInit() {
   // frc::SmartDashboard::PutNumber( "Shooter A", kShooterA );
 
   frc::SmartDashboard::PutBoolean("Config Gains", false);
+  frc::SmartDashboard::PutBoolean("Set Arm Zeros", false);
 
 }
 
@@ -88,20 +87,27 @@ void Robot::RobotPeriodic() {
   // double elevatorA = frc::SmartDashboard::GetNumber( "Elevator A", 0.0 );
 
   bool configGains = frc::SmartDashboard::GetBoolean("Config Gains", false);
-
   if (configGains) {
+    m_armMotor.SetParameters( armUI.GetParameters() );
+    m_armMotor.SetMotionProfile( armUI.GetMotionProfile() );
 
-    m_armMotor.SetParameters( armUI.GetNTValues() );
-    m_armMotor.SetMotionProfile( armMPUI.GetNTValues() );
-
-    m_wristMotor.SetParameters( wristUI.GetNTValues() );
-    m_wristMotor.SetMotionProfile( wristMPUI.GetNTValues() );
+    m_wristMotor.SetParameters( wristUI.GetParameters() );
+    m_wristMotor.SetMotionProfile( wristUI.GetMotionProfile() );
 
     ArmWristG = frc::SmartDashboard::GetNumber( "ArmWristG", 0.0 ); 
 
     frc::SmartDashboard::PutBoolean("Config Gains", false);
     fmt::print(" Gain Values written...\n" );
   } 
+
+  bool setZeros = frc::SmartDashboard::GetBoolean("Set Arm Zeros", false);
+  if (setZeros) {
+    m_armEncoder.SetOffset( 0_deg );
+    m_wristEncoder.SetOffset( 0_deg );
+
+    frc::SmartDashboard::PutBoolean("Set Arm Zeros", false);
+    fmt::print(" Encoders Zeroed...\n" );
+}
 
   // double shooterP = frc::SmartDashboard::GetNumber( "Shooter P", 0.0 );
   // double shooterI = frc::SmartDashboard::GetNumber( "Shooter I", 0.0 );

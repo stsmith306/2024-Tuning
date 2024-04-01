@@ -13,9 +13,19 @@ public:
         m_offset = frc::Preferences::GetDouble( m_pref_name, 0.0 ) * 1_tr;
     }
 
-    void SetOffset( units::turn_t offset ) {
-        m_offset = offset;
+        // Set the encoder offset to the raw value.
+        // Store the new offset in the Preferences
+    void SetOffset( double offset ) {
+        m_offset = offset * 1_tr;
         frc::Preferences::SetDouble( m_pref_name, m_offset.value() );
+        ResetOffset( );
+    }
+
+        // Set the current position of the encoder to the new_angle.
+        // Store the new offset in the Preferences
+    void SetOffset( units::degree_t new_angle ) {
+        double new_offset = ((GetPosition() - new_angle).value() / 360.0) + m_offset.value();
+        SetOffset( new_offset );
     }
 
     virtual bool IsConnected( void ) = 0;
@@ -27,6 +37,8 @@ public:
 protected:
     std::string m_pref_name;
     units::turn_t m_offset;
+
+    virtual void ResetOffset( ) = 0;
 };
 
 // Uses the DutyCycleEncoder class to use an SRX mag absolute encoder
@@ -78,37 +90,4 @@ public:
 private:
     frc::DutyCycleEncoder m_Encoder;
     bool m_read_once;
-};
-
-class CTRECANCoder : public AbsoluteEncoder {
-public:
-    CTRECANCoder( std::string_view pref_name, int CAN_Id, std::string canbus="" ) 
-        : AbsoluteEncoder( pref_name ), m_Encoder{ CAN_Id, canbus }
-    {
-        ctre::phoenix6::configs::CANcoderConfiguration configs{};
-        configs.MagnetSensor.MagnetOffset = m_offset.value();
-        m_Encoder.GetConfigurator().Apply(configs);
-    }
-
-    bool IsConnected( void ) {
-        return !( m_Encoder.GetFault_BadMagnet().GetValue() ||
-                  m_Encoder.GetFault_Hardware().GetValue() ||
-                  m_Encoder.GetFault_Undervoltage().GetValue() ||
-                  m_Encoder.GetFault_BootDuringEnable().GetValue() );
-    }
-    units::degree_t GetAbsolutePosition( ) { return m_Encoder.GetAbsolutePosition().GetValue(); }
-    units::degree_t GetPosition( ) { return m_Encoder.GetPosition().GetValue(); }
-    units::revolutions_per_minute_t GetVelocity( ) { return m_Encoder.GetVelocity().GetValue(); }
-    void SensorDirection( bool Clockwise_Positive ) {
-        ctre::phoenix6::configs::CANcoderConfiguration configs{};
-        m_Encoder.GetConfigurator().Refresh(configs);
-        configs.MagnetSensor.SensorDirection = Clockwise_Positive;
-        m_Encoder.GetConfigurator().Apply(configs);
-    }
-
-    int GetChannel( void ) { return m_Encoder.GetDeviceID(); }
-
-private:
-    ctre::phoenix6::hardware::CANcoder m_Encoder;
-
 };

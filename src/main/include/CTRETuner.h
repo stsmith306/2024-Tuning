@@ -6,15 +6,15 @@
 
 #include "Tuning.h"
 
-class TalonFXTuner : public tuning::MotorTuner {
+class AngularTalonFXTuner : public tuning::AngularMotorTuner {
 public:
-    TalonFXTuner( std::string_view name, int CAN_Id, std::string canbus = "", tuning::Parameters p={}, 
+    AngularTalonFXTuner( std::string_view name, int CAN_Id, std::string canbus = "", tuning::Parameters p={}, 
                   tuning::MechanismType mech = tuning::Simple, tuning::ControlType ctrl = tuning::OnBoard );
     
     void LinkCANCoder( int CANCoderID );
     void SetParameters( tuning::Parameters p );
     void SetInverted( bool inverted = false );
-    void SetMotionProfile( tuning::MotionProfile prof );
+    void SetMotionProfile( tuning::AngularMotionProfile prof );
 
 private:
     ctre::phoenix6::hardware::TalonFX m_talon;

@@ -5,9 +5,9 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
-TalonFXTuner::TalonFXTuner( std::string_view name, int CAN_Id, std::string canbus, tuning::Parameters p, 
+AngularTalonFXTuner::AngularTalonFXTuner( std::string_view name, int CAN_Id, std::string canbus, tuning::Parameters p, 
                             tuning::MechanismType mech, tuning::ControlType ctrl) 
-    : MotorTuner(name, p, mech, ctrl), m_talon{CAN_Id, canbus}
+    : AngularMotorTuner(name, p, mech, ctrl), m_talon{CAN_Id, canbus}
 {
 
     m_position.SetUpdateFrequency(50_Hz);
@@ -42,7 +42,7 @@ TalonFXTuner::TalonFXTuner( std::string_view name, int CAN_Id, std::string canbu
     }
 }
 
-void TalonFXTuner::LinkCANCoder( int CANCoderID ) {
+void AngularTalonFXTuner::LinkCANCoder( int CANCoderID ) {
 
     ctre::phoenix6::configs::TalonFXConfiguration configs{};
     m_talon.GetConfigurator().Refresh(configs);
@@ -52,7 +52,7 @@ void TalonFXTuner::LinkCANCoder( int CANCoderID ) {
     m_talon.GetConfigurator().Apply(configs);
 }
 
-void TalonFXTuner::SetParameters( tuning::Parameters p ) {
+void AngularTalonFXTuner::SetParameters( tuning::Parameters p ) {
     m_parameters = p;
     if( m_ctrl == tuning::Software ) {
             // Setup the Software feedforward.
@@ -75,16 +75,16 @@ void TalonFXTuner::SetParameters( tuning::Parameters p ) {
     }
 }
 
-void TalonFXTuner::SetInverted( bool inverted ) {
+void AngularTalonFXTuner::SetInverted( bool inverted ) {
     ctre::phoenix6::configs::TalonFXConfiguration configs{};
     m_talon.GetConfigurator().Refresh(configs);
     configs.MotorOutput.Inverted = inverted;
     m_talon.GetConfigurator().Apply(configs);
 }
 
-void TalonFXTuner::SetMotionProfile( tuning::MotionProfile prof ) {
+void AngularTalonFXTuner::SetMotionProfile( tuning::AngularMotionProfile prof ) {
     if( m_ctrl == tuning::Software ) {
-        MotorTuner::SetMotionProfile( prof );
+        AngularMotorTuner::SetMotionProfile( prof );
         return;
     }
 
@@ -97,7 +97,7 @@ void TalonFXTuner::SetMotionProfile( tuning::MotionProfile prof ) {
     m_talon.GetConfigurator().Apply(configs);
 }
 
-void TalonFXTuner::MotorPeriodic( double arbFF ) {
+void AngularTalonFXTuner::MotorPeriodic( double arbFF ) {
     // Refresh all the signals.
     m_position.Refresh();
     m_velocity.Refresh();
@@ -118,6 +118,6 @@ void TalonFXTuner::MotorPeriodic( double arbFF ) {
     }
 }
 
-units::degree_t TalonFXTuner::GetPosition() {
+units::degree_t AngularTalonFXTuner::GetPosition() {
     return m_position.GetValue();
 }

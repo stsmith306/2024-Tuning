@@ -6,12 +6,12 @@
 
 using namespace tuning;
 
-ParametersUI::ParametersUI( std::string tab, std::string name, tuning::Parameters p )
-    : m_params{p}, m_tab{tab}, m_name{name} {
+AngularTuningUI::AngularTuningUI( std::string tab, std::string name, tuning::Parameters p, tuning::AngularMotionProfile prof )
+    : m_tab{tab}, m_name{name}, m_params{p}, m_prof{prof} {
 
 }
 
-void ParametersUI::PutNTValues( ) {
+void AngularTuningUI::Refresh( ) {
   std::string item_name;
   
   item_name = std::string{m_name} + " P";
@@ -34,9 +34,18 @@ void ParametersUI::PutNTValues( ) {
 
   item_name = std::string{m_name} + " A";
   frc::SmartDashboard::PutNumber( item_name, m_params.kA );
+
+  item_name = std::string{m_name} + " MaxVelocity";
+  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxVelocity.value() );
+
+  item_name = std::string{m_name} + " MaxAccel";
+  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxAcceleration.value() );
+
+  item_name = std::string{m_name} + " MaxJerk";
+  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxJerk.value() );
 }
 
-tuning::Parameters ParametersUI::GetNTValues( ) {
+tuning::Parameters AngularTuningUI::GetParameters( ) {
   std::string item_name;
 
   item_name = std::string{m_name} + " P";
@@ -63,26 +72,7 @@ tuning::Parameters ParametersUI::GetNTValues( ) {
   return m_params;
 }
 
-MotionProfileUI::MotionProfileUI( std::string tab, std::string name, tuning::MotionProfile p )
-    :  m_prof{p}, m_tab{tab}, m_name{name} {
-
-}
-
-void MotionProfileUI::PutNTValues( ) {
-  std::string item_name;
-  
-  item_name = std::string{m_name} + " MaxVelocity";
-  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxVelocity.value() );
-
-  item_name = std::string{m_name} + " MaxAccel";
-  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxAcceleration.value() );
-
-  item_name = std::string{m_name} + " MaxJerk";
-  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxJerk.value() );
-
-}
-
-tuning::MotionProfile MotionProfileUI::GetNTValues( ) {
+tuning::AngularMotionProfile AngularTuningUI::GetMotionProfile( ) {
   std::string item_name;
 
   item_name = std::string{m_name} + " MaxVelocity";
@@ -97,12 +87,13 @@ tuning::MotionProfile MotionProfileUI::GetNTValues( ) {
   return m_prof;
 }
 
-MotorTuner::MotorTuner( std::string_view name, tuning::Parameters p, 
+
+
+AngularMotorTuner::AngularMotorTuner( std::string_view name, tuning::Parameters p, 
                         tuning::MechanismType mech, tuning::ControlType ctrl ) 
     : m_name{name}, m_parameters{p}, m_mech{mech}, m_ctrl{ctrl}, m_softPID{p.kP, p.kI, p.kD} {
 
     m_armFF = nullptr;
-    m_elevatorFF = nullptr;
     m_simpleFF = nullptr;
     m_Profile = nullptr;
 
@@ -115,7 +106,7 @@ MotorTuner::MotorTuner( std::string_view name, tuning::Parameters p,
     }
 }
 
-void MotorTuner::Update( units::degree_t position, double arbFF ) {
+void AngularMotorTuner::Update( units::degree_t position, double arbFF ) {
     frc::SmartDashboard::PutNumber( m_name + " Position", position.value());
     frc::SmartDashboard::PutNumber( m_name + " Goal Position", m_Goal.position.value());
     
@@ -143,33 +134,31 @@ void MotorTuner::Update( units::degree_t position, double arbFF ) {
     MotorPeriodic( arbFF );
 }
 
-void MotorTuner::Update( double arbFF ) {
+void AngularMotorTuner::Update( double arbFF ) {
     Update( GetPosition(), arbFF );
 }
 
-units::degree_t MotorTuner::GetPosition() {
+units::degree_t AngularMotorTuner::GetPosition() {
     fmt::print( "MotorTuner::GetPosition() for <{}> NOT OVERRIDDEN!  CONTROL WILL NOT WORK!!!!\n", m_name );
     return 0_deg;
 }
 
-void MotorTuner::SetGoal( frc::TrapezoidProfile<units::degrees>::State goal ) {
+void AngularMotorTuner::SetGoal( frc::TrapezoidProfile<units::degrees>::State goal ) {
     m_Goal = goal;
 }
 
-void MotorTuner::SetMotionProfile( tuning::MotionProfile prof ) {
+void AngularMotorTuner::SetMotionProfile( tuning::AngularMotionProfile prof ) {
     delete m_Profile;
     m_Profile = new frc::TrapezoidProfile<units::degrees>({prof.MaxVelocity, prof.MaxAcceleration});
 }
 
 
-void MotorTuner::CreateSoftwareFeedForward() {
+void AngularMotorTuner::CreateSoftwareFeedForward() {
     // Destroy old feedforwards.
     delete m_armFF;
-    delete m_elevatorFF;
     delete m_simpleFF;
 
     m_armFF = nullptr;
-    m_elevatorFF = nullptr;
     m_simpleFF = nullptr;
 
         // Setup the Software feedforward.
@@ -178,11 +167,6 @@ void MotorTuner::CreateSoftwareFeedForward() {
         m_armFF = new frc::ArmFeedforward{units::volt_t{ m_parameters.kS}, units::volt_t{ m_parameters.kG}, 
                                     units::unit_t<frc::ArmFeedforward::kv_unit> {m_parameters.kV}, 
                                     units::unit_t<frc::ArmFeedforward::ka_unit> {m_parameters.kA}};
-    } else if( m_mech == tuning::Elevator ) {
-        // Using Elevator
-        m_elevatorFF = new frc::ElevatorFeedforward{units::volt_t{ m_parameters.kS}, units::volt_t{ m_parameters.kG}, 
-                                    units::unit_t<frc::ElevatorFeedforward::kv_unit> {m_parameters.kV}, 
-                                    units::unit_t<frc::ElevatorFeedforward::ka_unit> {m_parameters.kA}};
     } else {
         // Use Elevator with zero kG for Simple
         m_simpleFF = new frc::SimpleMotorFeedforward<units::turn>( m_parameters.kS * 1_V, m_parameters.kV * 1_V * 1_s / 1_tr, 
