@@ -1,6 +1,7 @@
 
 #include <frc/DriverStation.h>
-#include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/smartdashboard/Smartdashboard.h>
+#include <frc/shuffleboard/Shuffleboard.h>
 
 #include "Tuning.h"
 
@@ -12,62 +13,68 @@ AngularTuningUI::AngularTuningUI( std::string tab, std::string name, tuning::Par
 }
 
 void AngularTuningUI::Refresh( ) {
-  std::string item_name;
-  
-  item_name = std::string{m_name} + " P";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kP );
+    std::string item_name;
 
-  item_name = std::string{m_name} + " I";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kI );
+    frc::ShuffleboardLayout &layout = frc::Shuffleboard::GetTab(m_tab)
+        .GetLayout(m_name, frc::BuiltInLayouts::kGrid)
+        .WithProperties({ { "Number of columns", nt::Value::MakeDouble(2) },
+                          { "Number of rows", nt::Value::MakeDouble(7) } })
+        .WithSize(5, 7);
 
-  item_name = std::string{m_name} + " D";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kD );
+    item_name = std::string{m_name} + " P";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kP).WithPosition(0, 0).GetEntry();
 
-  item_name = std::string{m_name} + " S";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kS );
+    item_name = std::string{m_name} + " I";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kI).WithPosition(0, 1).GetEntry();
 
-  item_name = std::string{m_name} + " G";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kG );
+    item_name = std::string{m_name} + " D";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kD).WithPosition(0, 2).GetEntry();
 
-  item_name = std::string{m_name} + " V";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kV );
+    item_name = std::string{m_name} + " S";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kS).WithPosition(0, 3).GetEntry();
 
-  item_name = std::string{m_name} + " A";
-  frc::SmartDashboard::PutNumber( item_name, m_params.kA );
+    item_name = std::string{m_name} + " G";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kG).WithPosition(0, 4).GetEntry();
 
-  item_name = std::string{m_name} + " MaxVelocity";
-  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxVelocity.value() );
+    item_name = std::string{m_name} + " V";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kV).WithPosition(0, 5).GetEntry();
 
-  item_name = std::string{m_name} + " MaxAccel";
-  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxAcceleration.value() );
+    item_name = std::string{m_name} + " A";
+    m_nt_entries[item_name] = layout.Add(item_name, m_params.kA).WithPosition(0, 6).GetEntry();
 
-  item_name = std::string{m_name} + " MaxJerk";
-  frc::SmartDashboard::PutNumber( item_name, m_prof.MaxJerk.value() );
+    item_name = std::string{m_name} + " MaxVelocity";
+    m_nt_entries[item_name] = layout.Add(item_name, m_prof.MaxVelocity.value()).WithPosition(1, 0).GetEntry();
+
+    item_name = std::string{m_name} + " MaxAccel";
+    m_nt_entries[item_name] = layout.Add(item_name, m_prof.MaxAcceleration.value()).WithPosition(1, 1).GetEntry();
+
+    item_name = std::string{m_name} + " MaxJerk";
+    m_nt_entries[item_name] = layout.Add(item_name, m_prof.MaxJerk.value()).WithPosition(1, 2).GetEntry();
 }
 
 tuning::Parameters AngularTuningUI::GetParameters( ) {
   std::string item_name;
 
   item_name = std::string{m_name} + " P";
-  m_params.kP = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kP = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   item_name = std::string{m_name} + " I";
-  m_params.kI = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kI = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   item_name = std::string{m_name} + " D";
-  m_params.kD = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kD = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   item_name = std::string{m_name} + " S";
-  m_params.kS = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kS = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   item_name = std::string{m_name} + " G";
-  m_params.kG = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kG = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   item_name = std::string{m_name} + " V";
-  m_params.kV = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kV = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   item_name = std::string{m_name} + " A";
-  m_params.kA = frc::SmartDashboard::GetNumber( item_name, 0.0 );
+  m_params.kA = m_nt_entries[item_name]->GetDouble( 0.0 );
 
   return m_params;
 }
@@ -76,13 +83,13 @@ tuning::AngularMotionProfile AngularTuningUI::GetMotionProfile( ) {
   std::string item_name;
 
   item_name = std::string{m_name} + " MaxVelocity";
-  m_prof.MaxVelocity = frc::SmartDashboard::GetNumber( item_name, 0.0 ) * 1_deg_per_s;
+  m_prof.MaxVelocity = m_nt_entries[item_name]->GetDouble( 0.0 ) * 1_deg_per_s;
 
   item_name = std::string{m_name} + " MaxAccel";
-  m_prof.MaxAcceleration = frc::SmartDashboard::GetNumber( item_name, 0.0 ) * 1_deg_per_s_sq;
+  m_prof.MaxAcceleration = m_nt_entries[item_name]->GetDouble( 0.0 ) * 1_deg_per_s_sq;
 
   item_name = std::string{m_name} + " MaxJerk";
-  m_prof.MaxJerk = frc::SmartDashboard::GetNumber( item_name, 0.0 ) * 1_deg_per_s_cu;
+  m_prof.MaxJerk = m_nt_entries[item_name]->GetDouble( 0.0 ) * 1_deg_per_s_cu;
 
   return m_prof;
 }

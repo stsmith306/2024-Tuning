@@ -10,6 +10,7 @@
 class AbsoluteEncoder {
 public:
     AbsoluteEncoder( std::string_view pref_name ) : m_pref_name{pref_name} {
+        frc::Preferences::InitDouble( m_pref_name, 0.0 );
         m_offset = frc::Preferences::GetDouble( m_pref_name, 0.0 ) * 1_tr;
     }
 

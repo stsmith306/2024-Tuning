@@ -10,6 +10,8 @@
 #include <frc/controller/ElevatorFeedforward.h>
 #include <frc/trajectory/TrapezoidProfile.h>
 
+#include <networktables/GenericEntry.h>
+
 namespace tuning { 
 
 struct Parameters {
@@ -52,7 +54,7 @@ private:
 public:
     tuning::Parameters m_params;
     tuning::AngularMotionProfile m_prof;
-
+    std::map<std::string, nt::GenericEntry*> m_nt_entries;
 };
 
 
