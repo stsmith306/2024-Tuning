@@ -102,13 +102,13 @@ void AngularTalonFXTuner::MotorPeriodic( double arbFF ) {
     m_position.Refresh();
     m_velocity.Refresh();
     frc::SmartDashboard::PutNumber( m_name + " Position", m_position.GetValueAsDouble() * 360.0);
-    frc::SmartDashboard::PutNumber( m_name + " Velocity", m_velocity.GetValueAsDouble());
+    frc::SmartDashboard::PutNumber( m_name + " Velocity(RPM)", m_velocity.GetValueAsDouble() * 60.0);
 
     if( m_ctrl == tuning::OnBoard ) {
         m_targetPos.Refresh();
         m_targetVel.Refresh();
         frc::SmartDashboard::PutNumber( m_name + " MMagic Pos", m_targetPos.GetValueAsDouble() * 360.0);
-        frc::SmartDashboard::PutNumber( m_name + " MMagic Vel", m_targetVel.GetValueAsDouble());
+        frc::SmartDashboard::PutNumber( m_name + " MMagic Vel(RPM)", m_targetVel.GetValueAsDouble() * 60.0);
 
         m_talon.SetControl( m_request.WithPosition( m_Goal.position ).WithFeedForward(arbFF) );  
 

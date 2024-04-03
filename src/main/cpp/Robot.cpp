@@ -26,19 +26,16 @@ void Robot::RobotInit() {
   m_wristEncoder.SensorDirection( true );
 
   m_armMotor.SetInverted( true );
-  m_armMotor.SetMotionProfile( armUI.m_prof );
+  m_armMotor.SetMotionProfile( armUI.GetMotionProfile() );
 
   m_wristMotor.LinkCANCoder( m_wristEncoder.GetChannel() );
-  m_wristMotor.SetMotionProfile( wristUI.m_prof );
+  m_wristMotor.SetMotionProfile( wristUI.GetMotionProfile() );
 
 
   // TuningParameters::Values pid_vals;
   // // pid_vals = TuningParameters::Values{ kElevatorP, kElevatorI, kElevatorD, 
   // //                                    kElevatorS, kElevatorG, kElevatorV, kElevatorA };
   // // TuningParameters::SetSmartDashboardValues( "Elevator", pid_vals );
-
-  armUI.Refresh();
-  wristUI.Refresh();
 
   ArmWristG = kArmWristG;
   frc::SmartDashboard::PutNumber( "ArmWristG", ArmWristG ); 

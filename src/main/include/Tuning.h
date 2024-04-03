@@ -44,16 +44,15 @@ class AngularTuningUI {
 public:
     AngularTuningUI( std::string tab, std::string name, tuning::Parameters p, tuning::AngularMotionProfile prof );
 
-    void Refresh( );
     tuning::Parameters GetParameters( );
+    void SetParameters( tuning::Parameters );
+
     tuning::AngularMotionProfile GetMotionProfile( );
+    void SetMotionProfile( tuning::AngularMotionProfile );
 
 private:
     std::string m_tab;
     std::string m_name;
-public:
-    tuning::Parameters m_params;
-    tuning::AngularMotionProfile m_prof;
     std::map<std::string, nt::GenericEntry*> m_nt_entries;
 };
 
@@ -90,7 +89,7 @@ protected:
 
         // Software Control Stuff
     frc::PIDController m_softPID;
-    frc::SimpleMotorFeedforward<units::turn> *m_simpleFF;
+    frc::SimpleMotorFeedforward<units::degrees> *m_simpleFF;
     frc::ArmFeedforward *m_armFF;
 
         // Software Angular Trapezoid Profile
@@ -133,9 +132,8 @@ protected:
 
         // Software Control Stuff
     frc::PIDController m_softPID;
-    frc::SimpleMotorFeedforward<units::turn> *m_simpleFF;
+    frc::SimpleMotorFeedforward<units::meters> *m_simpleFF;
     frc::ElevatorFeedforward *m_elevatorFF;
-    frc::ArmFeedforward *m_armFF;
 
         // Software Linear Trapezoid Profile
     frc::TrapezoidProfile<units::meters> *m_Profile;
