@@ -61,7 +61,31 @@ private:
 enum MechanismType { Simple, Elevator, Arm };
 enum ControlType { OnBoard, Software };
 
-class AngularMotorTuner {
+class BaseMotorTuner {
+public:
+    BaseMotorTuner( std::string_view name, tuning::Parameters p, 
+                tuning::MechanismType mech, tuning::ControlType ctrl );
+
+    virtual void SetParameters( tuning::Parameters p ) = 0;
+    virtual tuning::Parameters GetParameters( void ) {return m_parameters;}
+
+    virtual void SetInverted( bool inverted = false ) = 0;
+
+    virtual void SetMotionProfile( tuning::AngularMotionProfile prof ) = 0;
+protected:
+    std::string m_name;
+    tuning::Parameters m_parameters;
+    tuning::MechanismType m_mech;
+    tuning::ControlType m_ctrl;
+
+        // Software Control Stuff
+    frc::PIDController m_softPID;
+
+    virtual void MotorPeriodic( double arbFF ) = 0;
+    virtual void CreateSoftwareFeedForward() = 0;
+};
+
+class AngularMotorTuner : virtual public BaseMotorTuner {
 public:
     AngularMotorTuner( std::string_view name, tuning::Parameters p, 
                 tuning::MechanismType mech, tuning::ControlType ctrl );
@@ -74,21 +98,10 @@ public:
 
     virtual void SetGoal( frc::TrapezoidProfile<units::degrees>::State goal );
 
-    virtual void SetParameters( tuning::Parameters p ) = 0;
-    virtual tuning::Parameters GetParameters( void ) {return m_parameters;}
-
-    virtual void SetInverted( bool inverted = false ) = 0;
-
     virtual void SetMotionProfile( tuning::AngularMotionProfile prof );
 
 protected:
-    std::string m_name;
-    tuning::Parameters m_parameters;
-    tuning::MechanismType m_mech;
-    tuning::ControlType m_ctrl;
-
-        // Software Control Stuff
-    frc::PIDController m_softPID;
+         // Software Control Stuff
     frc::SimpleMotorFeedforward<units::degrees> *m_simpleFF;
     frc::ArmFeedforward *m_armFF;
 
@@ -100,13 +113,14 @@ protected:
     void CreateSoftwareFeedForward();
 
         // Must override to provide current position value that control is based on.
-    virtual units::degree_t GetPosition();
-    virtual void MotorPeriodic( double arbFF ) = 0;
+    virtual units::degree_t GetPosition() = 0;
 };
 
-class LinearMotorTuner {
+class LinearMotorTuner : virtual public BaseMotorTuner {
 public:
-    LinearMotorTuner( std::string_view name, tuning::Parameters p, 
+    using MetersPerTurn = units::unit_t<units::compound_unit<units::meters, units::inverse<units::turns>>>;
+
+    LinearMotorTuner( std::string_view name, tuning::Parameters p, MetersPerTurn gearRatio,
                 tuning::MechanismType mech, tuning::ControlType ctrl );
 
         // Update and provide the position to use for control.
@@ -117,21 +131,15 @@ public:
 
     virtual void SetGoal( frc::TrapezoidProfile<units::meters>::State goal );
 
-    virtual void SetParameters( tuning::Parameters p ) = 0;
-    virtual tuning::Parameters GetParameters( void ) {return m_parameters;}
-
-    virtual void SetInverted( bool inverted = false ) = 0;
+    void SetGearRatio( MetersPerTurn gearRatio );
 
     virtual void SetMotionProfile( tuning::LinearMotionProfile prof );
 
 protected:
-    std::string m_name;
-    tuning::Parameters m_parameters;
-    tuning::MechanismType m_mech;
-    tuning::ControlType m_ctrl;
+        // Gear ratio between encoder rotations and linear motion
+    MetersPerTurn m_gearRatio;
 
         // Software Control Stuff
-    frc::PIDController m_softPID;
     frc::SimpleMotorFeedforward<units::meters> *m_simpleFF;
     frc::ElevatorFeedforward *m_elevatorFF;
 
@@ -143,8 +151,31 @@ protected:
     void CreateSoftwareFeedForward();
 
         // Must override to provide current position value that control is based on.
-    virtual units::meter_t GetPosition();
-    virtual void MotorPeriodic( double arbFF ) = 0;
+    virtual units::meter_t GetPosition() = 0;
+};
+
+class VelocityMotorTuner : virtual public BaseMotorTuner {
+public:
+    VelocityMotorTuner( std::string_view name, tuning::Parameters p, tuning::ControlType ctrl );
+
+        // Update and provide the velocity to use for control.
+    void Update( units::revolutions_per_minute_t velocity, double arbFF = 0.0 );
+
+        // Update and use the default encoder for velocity control.
+    void Update( double arbFF = 0.0 );
+
+    virtual void SetVelocity( units::revolutions_per_minute_t goal );
+
+protected:
+    units::revolutions_per_minute_t m_Goal;
+
+        // Software Control Stuff
+    frc::SimpleMotorFeedforward<units::turns> *m_simpleFF;
+
+    void CreateSoftwareFeedForward();
+
+        // Must override to provide current velocity value that control is based on.
+    virtual units::revolutions_per_minute_t GetVelocity() = 0;
 };
 
 }  // namespace tuning

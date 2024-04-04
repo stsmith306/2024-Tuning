@@ -5,11 +5,10 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
-AngularTalonFXTuner::AngularTalonFXTuner( std::string_view name, int CAN_Id, std::string canbus, tuning::Parameters p, 
-                            tuning::MechanismType mech, tuning::ControlType ctrl) 
-    : AngularMotorTuner(name, p, mech, ctrl), m_talon{CAN_Id, canbus}
+BaseTalonFXTuner::BaseTalonFXTuner( std::string_view name, int CAN_Id, std::string canbus, tuning::Parameters p, 
+                                    tuning::MechanismType mech, tuning::ControlType ctrl ) 
+    : BaseMotorTuner( name, p, mech, ctrl ), m_talon{CAN_Id, canbus}
 {
-
     m_position.SetUpdateFrequency(50_Hz);
     m_velocity.SetUpdateFrequency(50_Hz);
     m_targetPos.SetUpdateFrequency(50_Hz);
@@ -35,14 +34,10 @@ AngularTalonFXTuner::AngularTalonFXTuner( std::string_view name, int CAN_Id, std
         configs.Slot0.kG = m_parameters.kG;
         configs.Slot0.kV = m_parameters.kV;
         configs.Slot0.kA = m_parameters.kA;
-        configs.MotionMagic.MotionMagicCruiseVelocity = 0.5;    /* in rotations per second */
-        configs.MotionMagic.MotionMagicAcceleration = 1;        /* in rotations per second^2 */
-        configs.MotionMagic.MotionMagicJerk = 2;                /* in rotations per second^3 */
-        m_talon.GetConfigurator().Apply(configs);
     }
 }
 
-void AngularTalonFXTuner::LinkCANCoder( int CANCoderID ) {
+void BaseTalonFXTuner::LinkCANCoder( int CANCoderID ) {
 
     ctre::phoenix6::configs::TalonFXConfiguration configs{};
     m_talon.GetConfigurator().Refresh(configs);
@@ -52,13 +47,11 @@ void AngularTalonFXTuner::LinkCANCoder( int CANCoderID ) {
     m_talon.GetConfigurator().Apply(configs);
 }
 
-void AngularTalonFXTuner::SetParameters( tuning::Parameters p ) {
+void BaseTalonFXTuner::SetParameters( tuning::Parameters p ) {
     m_parameters = p;
     if( m_ctrl == tuning::Software ) {
             // Setup the Software feedforward.
         CreateSoftwareFeedForward();
-
-            // Setup the Trapezoid Profile.
         
     } else {
         ctre::phoenix6::configs::TalonFXConfiguration configs{};
@@ -75,11 +68,31 @@ void AngularTalonFXTuner::SetParameters( tuning::Parameters p ) {
     }
 }
 
-void AngularTalonFXTuner::SetInverted( bool inverted ) {
+void BaseTalonFXTuner::SetInverted( bool inverted ) {
     ctre::phoenix6::configs::TalonFXConfiguration configs{};
     m_talon.GetConfigurator().Refresh(configs);
     configs.MotorOutput.Inverted = inverted;
     m_talon.GetConfigurator().Apply(configs);
+}
+
+
+
+
+AngularTalonFXTuner::AngularTalonFXTuner( std::string_view name, int CAN_Id, std::string canbus, tuning::Parameters p, 
+                            tuning::MechanismType mech, tuning::ControlType ctrl) 
+    : BaseMotorTuner( name, p, mech, ctrl ),
+      BaseTalonFXTuner( name, CAN_Id, canbus, p, mech, ctrl ),
+      AngularMotorTuner(name, p, mech, ctrl)
+{
+    if( m_ctrl != tuning::Software ) {
+            // Set the Motion Magic values for Angular motion.
+        ctre::phoenix6::configs::TalonFXConfiguration configs{};
+        m_talon.GetConfigurator().Refresh(configs);
+        configs.MotionMagic.MotionMagicCruiseVelocity = 0.5;    /* in rotations per second */
+        configs.MotionMagic.MotionMagicAcceleration = 1;        /* in rotations per second^2 */
+        configs.MotionMagic.MotionMagicJerk = 2;                /* in rotations per second^3 */
+        m_talon.GetConfigurator().Apply(configs);
+    }
 }
 
 void AngularTalonFXTuner::SetMotionProfile( tuning::AngularMotionProfile prof ) {
@@ -101,7 +114,7 @@ void AngularTalonFXTuner::MotorPeriodic( double arbFF ) {
     // Refresh all the signals.
     m_position.Refresh();
     m_velocity.Refresh();
-    frc::SmartDashboard::PutNumber( m_name + " Position", m_position.GetValueAsDouble() * 360.0);
+    frc::SmartDashboard::PutNumber( m_name + " EncPosition", m_position.GetValueAsDouble() * 360.0);
     frc::SmartDashboard::PutNumber( m_name + " Velocity(RPM)", m_velocity.GetValueAsDouble() * 60.0);
 
     if( m_ctrl == tuning::OnBoard ) {
@@ -116,6 +129,8 @@ void AngularTalonFXTuner::MotorPeriodic( double arbFF ) {
         // Software control arbFF has the PID and FF calculation. 
         m_talon.Set( arbFF );
     }
+    frc::SmartDashboard::PutNumber( m_name + " Voltage", m_talon.GetMotorVoltage().GetValueAsDouble() );
+    frc::SmartDashboard::PutNumber( m_name + " Current", m_talon.GetSupplyCurrent().GetValueAsDouble() );
 }
 
 units::degree_t AngularTalonFXTuner::GetPosition() {
