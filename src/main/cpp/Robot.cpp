@@ -19,8 +19,8 @@ void Robot::RobotInit() {
   // m_bottomShooterMotor.SetInverted(true);
   // m_bottomShooterMotor.Follow(m_topShooterMotor);
       constexpr double kShooterAbsoluteOffset = -0.068;
-    constexpr double kWristAbsoluteOffset = 0.314;
-    constexpr double kArmAbsoluteOffset = -0.243;
+    constexpr double kWristAbsoluteOffset = 0.200927734375;
+    constexpr double kArmAbsoluteOffset = 0.127197265625;
 
 
   ctre::phoenix6::configs::CANcoderConfiguration wristAbsoluteEncoderConfigs{};
@@ -36,14 +36,14 @@ void Robot::RobotInit() {
   m_armMotor.GetConfigurator().Apply(ctre::phoenix6::configs::TalonFXConfiguration{});
 
   ctre::phoenix6::configs::TalonFXConfiguration armConfigs{};
-  armConfigs.Slot0.kV = kArmV;
-  armConfigs.Slot0.kP = kArmP;
-  armConfigs.Slot0.kI = kArmI;
-  armConfigs.Slot0.kD = kArmD;
-  armConfigs.Feedback.FeedbackRemoteSensorID = m_armEncoder.GetDeviceID();
-  armConfigs.Feedback.FeedbackSensorSource = ctre::phoenix6::signals::FeedbackSensorSourceValue::RemoteCANcoder;
-  armConfigs.MotionMagic.MotionMagicAcceleration = 1;
-  armConfigs.MotionMagic.MotionMagicCruiseVelocity = 0.1;
+  // armConfigs.Slot0.kV = kArmV;
+  // armConfigs.Slot0.kP = kArmP;
+  // armConfigs.Slot0.kI = kArmI;
+  // armConfigs.Slot0.kD = kArmD;
+  // armConfigs.Feedback.FeedbackRemoteSensorID = m_armEncoder.GetDeviceID();
+  // armConfigs.Feedback.FeedbackSensorSource = ctre::phoenix6::signals::FeedbackSensorSourceValue::RemoteCANcoder;
+  // armConfigs.MotionMagic.MotionMagicAcceleration = 1;
+  // armConfigs.MotionMagic.MotionMagicCruiseVelocity = 0.1;
   armConfigs.MotorOutput.Inverted = true;
   m_armMotor.GetConfigurator().Apply(armConfigs, 50_ms);
 
@@ -62,8 +62,9 @@ void Robot::RobotInit() {
   wristConfigs.Slot0.kD = kWristD;
   wristConfigs.Feedback.FeedbackRemoteSensorID = m_wristEncoder.GetDeviceID();
   wristConfigs.Feedback.FeedbackSensorSource = ctre::phoenix6::signals::FeedbackSensorSourceValue::RemoteCANcoder;
-  wristConfigs.MotionMagic.MotionMagicAcceleration = 1;
-  wristConfigs.MotionMagic.MotionMagicCruiseVelocity = 0.5;
+  wristConfigs.MotionMagic.MotionMagicCruiseVelocity = 1.0;
+  wristConfigs.MotionMagic.MotionMagicAcceleration = 2.0;
+  wristConfigs.MotionMagic.MotionMagicJerk = 30.0;
   m_wristMotor.GetConfigurator().Apply(wristConfigs, 50_ms);
 
   auto status = wristPosReference.SetUpdateFrequency(50_Hz);
@@ -75,8 +76,8 @@ void Robot::RobotInit() {
       fmt::print( "Error setting wrist vel update Frequency!\n    {}\n", status.GetDescription() );
   }
 
-  armPosReference.SetUpdateFrequency(50_Hz);
-  armVelReference.SetUpdateFrequency(50_Hz);
+  // armPosReference.SetUpdateFrequency(50_Hz);
+  // armVelReference.SetUpdateFrequency(50_Hz);
 
   fmt::print( "Pos and Velocity update rates are : {} and {}\n", wristPosReference.GetAppliedUpdateFrequency(), wristVelReference.GetAppliedUpdateFrequency() );
 

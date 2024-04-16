@@ -86,8 +86,8 @@ class Robot : public frc::TimedRobot {
   double kWristD = 0.0;
 
   double kWristS = 0.0;
-  double kWristG = 0.0115;
-  double kWristV = 0.65;
+  double kWristG = 0.015;
+  double kWristV = 0.4;
   double kWristA = 0.0;
 
  
@@ -140,13 +140,13 @@ class Robot : public frc::TimedRobot {
   ctre::phoenix6::controls::MotionMagicDutyCycle m_armPositionDC{0_deg};
   ctre::phoenix6::StatusSignal<units::turn_t> armPos = m_armMotor.GetPosition();
   ctre::phoenix6::StatusSignal<units::turns_per_second_t> armVel = m_armMotor.GetVelocity();
-  ctre::phoenix6::StatusSignal<double> armPosReference = m_armMotor.GetClosedLoopReference();
-  ctre::phoenix6::StatusSignal<double> armVelReference = m_armMotor.GetClosedLoopReferenceSlope();
+  // ctre::phoenix6::StatusSignal<double> armPosReference = m_armMotor.GetClosedLoopReference();
+  // ctre::phoenix6::StatusSignal<double> armVelReference = m_armMotor.GetClosedLoopReferenceSlope();
 
   frc::PIDController m_armPID{kArmP, kArmI, kArmD};
   frc::ArmFeedforward *m_armFeedforward;
   
-  frc::TrapezoidProfile<units::degrees> m_armProfile{{360_deg_per_s, 360_deg_per_s_sq}};
+  frc::TrapezoidProfile<units::degrees> m_armProfile{{1_tr / 1_s, 2_tr/(1_s * 1_s)}};
   frc::TrapezoidProfile<units::degrees>::State m_armGoal;
   frc::TrapezoidProfile<units::degrees>::State m_armSetpoint{};
 
