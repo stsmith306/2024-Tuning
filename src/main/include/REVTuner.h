@@ -11,6 +11,7 @@ public:
     BaseSparkFlexTuner( std::string_view name, int CAN_Id, tuning::Parameters p, 
                         tuning::MechanismType mech, tuning::ControlType ctrl );
 
+    void AddFollower( rev::CANSparkFlex &follower, bool invert=false );
     void SetParameters( tuning::Parameters p );
     void SetInverted( bool inverted = false );
 protected:

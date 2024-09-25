@@ -11,7 +11,8 @@ public:
     BaseTalonFXTuner( std::string_view name, int CAN_Id, std::string canbus, tuning::Parameters p, 
                       tuning::MechanismType mech, tuning::ControlType ctrl );
 
-    void LinkCANCoder( int CANCoderID );
+    void LinkCANCoder( int CANCoderID, double RotorToSensorRatio );
+    void AddFollower( ctre::phoenix6::hardware::TalonFX &follower, bool invert=false );
     void SetParameters( tuning::Parameters p );
     void SetInverted( bool inverted = false );
 
