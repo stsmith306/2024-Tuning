@@ -40,6 +40,9 @@ void BaseSparkFlexTuner::SetParameters( tuning::Parameters p ) {
     }
 }
 
+void BaseSparkFlexTuner::AddFollower( rev::CANSparkFlex &follower, bool invert ) {
+    follower.Follow( m_flex, invert );
+}
 
 
 
@@ -54,6 +57,7 @@ AngularSparkFlexTuner::AngularSparkFlexTuner( std::string_view name, int CAN_Id,
             // setup the Angular specific smart motion values.
         m_pidController.SetSmartMotionMaxVelocity( 30 );    /* in RPM */
         m_pidController.SetSmartMotionMaxAccel( 60 );    /* in RPM / second */
+        fmt::print( "AngularSparkFlexTuner::AngularSparkFlexTuner -- <{}> CANSparkFlex SmartMotion configured.\n", m_name );
     }
 }
 
@@ -66,11 +70,12 @@ void AngularSparkFlexTuner::SetMotionProfile( tuning::AngularMotionProfile prof 
 
     m_pidController.SetSmartMotionMaxVelocity(  units::revolutions_per_minute_t( prof.MaxVelocity ).value() );    /* in RPM */
     m_pidController.SetSmartMotionMaxAccel( units::revolutions_per_minute_per_second_t(prof.MaxAcceleration).value() );    /* in RPM / second */
+    fmt::print( "AngularSparkFlexTuner::SetMotionProfile -- <{}> CANSparkFlex SmartMotion configured.\n", m_name );
 }
 
 void AngularSparkFlexTuner::MotorPeriodic( double arbFF ) {
     // Refresh all the signals.
-    frc::SmartDashboard::PutNumber( m_name + " EncPosition", m_encoder.GetPosition() * 360.0);
+// output in Update()       frc::SmartDashboard::PutNumber( m_name + " EncPosition", m_encoder.GetPosition() * 360.0);
     frc::SmartDashboard::PutNumber( m_name + " Velocity(RPM)", m_encoder.GetVelocity());
 
     if( m_ctrl == tuning::OnBoard ) {
@@ -102,12 +107,9 @@ VelocitySparkFlexTuner::VelocitySparkFlexTuner( std::string_view name, int CAN_I
 }
 
 void VelocitySparkFlexTuner::MotorPeriodic( double arbFF ) {
-    // Refresh all the signals.
-    // frc::SmartDashboard::PutNumber( m_name + " Position", m_encoder.GetPosition() * 360.0);
-    // frc::SmartDashboard::PutNumber( m_name + " Velocity(RPM)", m_encoder.GetVelocity());
 
     if( m_ctrl == tuning::OnBoard ) {
-        m_pidController.SetReference( m_encoder.GetVelocity(), rev::CANSparkFlex::ControlType::kVelocity );  
+        m_pidController.SetReference( m_Goal.value(), rev::CANSparkFlex::ControlType::kVelocity );  
 
     } else {
         // Software control arbFF has the PID and FF calculation. 
