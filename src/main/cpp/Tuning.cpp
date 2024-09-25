@@ -149,6 +149,7 @@ AngularMotorTuner::AngularMotorTuner( std::string_view name, tuning::Parameters 
 
     if( m_ctrl == tuning::Software ) {
             // Setup the Software feedforward.
+        fmt::print( "AngularMotorTuner -- <{}> is using software feedforward.\n", m_name );
         CreateSoftwareFeedForward();
 
             // Default to some slow values.
@@ -177,8 +178,9 @@ void AngularMotorTuner::Update( units::degree_t position, double arbFF ) {
         } else {
             ffOutput = m_simpleFF->Calculate( m_Setpoint.velocity ).value();
         }
-        frc::SmartDashboard::PutNumber( m_name + " PID Out", motorOutput);
-        frc::SmartDashboard::PutNumber( m_name + " Feedforward Out", ffOutput );
+        frc::SmartDashboard::PutNumber( m_name + " arbFF Output", arbFF);
+        frc::SmartDashboard::PutNumber( m_name + " PID Output", motorOutput);
+        frc::SmartDashboard::PutNumber( m_name + " Feedforward Output", ffOutput );
         frc::SmartDashboard::PutNumber( m_name + " Setpoint Position", m_Setpoint.position.value());
         frc::SmartDashboard::PutNumber( m_name + " Setpoint Velocity(RPM)", units::revolutions_per_minute_t(m_Setpoint.velocity).value() );
 
@@ -197,6 +199,11 @@ void AngularMotorTuner::SetGoal( frc::TrapezoidProfile<units::degrees>::State go
 }
 
 void AngularMotorTuner::SetMotionProfile( tuning::AngularMotionProfile prof ) {
+    if( m_ctrl != tuning::Software ) {
+        fmt::print( "AngularMotorTuner::SetMotionProfile -- <{}> is not setup for Software Control!\n", m_name);
+        return;
+    }
+
     delete m_Profile;
     m_Profile = new frc::TrapezoidProfile<units::degrees>({prof.MaxVelocity, prof.MaxAcceleration});
 }
@@ -212,11 +219,13 @@ void AngularMotorTuner::CreateSoftwareFeedForward() {
         // Setup the Software feedforward.
     if( m_mech == tuning::Arm ) {
         // Using Arm FF
+        fmt::print( "AngularMotorTuner::CreateSoftwareFeedForward -- <{}> is using software ArmFeedForward.\n", m_name);
         m_armFF = new frc::ArmFeedforward{units::volt_t{ m_parameters.kS}, units::volt_t{ m_parameters.kG}, 
                                     units::unit_t<frc::ArmFeedforward::kv_unit> {m_parameters.kV}, 
                                     units::unit_t<frc::ArmFeedforward::ka_unit> {m_parameters.kA}};
     } else {
         // Use Simple FF
+        fmt::print( "AngularMotorTuner::CreateSoftwareFeedForward -- <{}> is using software SimpleMotorFeedForward.\n", m_name);
         m_simpleFF = new frc::SimpleMotorFeedforward<units::degrees>( m_parameters.kS * 1_V, m_parameters.kV * 1_V / 1_deg_per_s, 
                                                                       m_parameters.kA * 1_V / 1_deg_per_s_sq );
     }
@@ -233,6 +242,7 @@ LinearMotorTuner::LinearMotorTuner( std::string_view name, tuning::Parameters p,
 
     if( m_ctrl == tuning::Software ) {
             // Setup the Software feedforward.
+        fmt::print( "LinearMotorTuner -- <{}> is using software feedforward.\n", m_name );
         CreateSoftwareFeedForward();
 
             // Default to some slow values.
@@ -285,6 +295,11 @@ void LinearMotorTuner::SetGearRatio( MetersPerTurn gearRatio ) {
 }
 
 void LinearMotorTuner::SetMotionProfile( tuning::LinearMotionProfile prof ) {
+    if( m_ctrl != tuning::Software ) {
+        fmt::print( "LinearMotorTuner::SetMotionProfile -- <{}> is not setup for Software Control!\n", m_name);
+        return;
+    }
+
     delete m_Profile;
     m_Profile = new frc::TrapezoidProfile<units::meters>({prof.MaxVelocity, prof.MaxAcceleration});
 }
@@ -301,11 +316,13 @@ void LinearMotorTuner::CreateSoftwareFeedForward() {
         // Setup the Software feedforward.
     if( m_mech == tuning::Elevator ) {
         // Using Arm
+        fmt::print( "LinearMotorTuner::CreateSoftwareFeedForward -- <{}> is using software ElevatorFeedforward.\n", m_name);
         m_elevatorFF = new frc::ElevatorFeedforward{units::volt_t{ m_parameters.kS}, units::volt_t{ m_parameters.kG}, 
                                     units::unit_t<frc::ElevatorFeedforward::kv_unit> {m_parameters.kV}, 
                                     units::unit_t<frc::ElevatorFeedforward::ka_unit> {m_parameters.kA}};
     } else {
-        // Use Elevator with zero kG for Simple
+        // Use Simple
+        fmt::print( "LinearMotorTuner::CreateSoftwareFeedForward -- <{}> is using software SimpleMotorFeedforward.\n", m_name);
         m_simpleFF = new frc::SimpleMotorFeedforward<units::meters>( m_parameters.kS * 1_V, m_parameters.kV * 1_V / 1_mps, 
                                                                      m_parameters.kA * 1_V / 1_mps_sq );
     }
